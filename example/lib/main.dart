@@ -54,10 +54,24 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+        body: Column(
+          children: [
+            Text('Running on: $_platformVersion\n'),
+            FilledButton(
+              child: Text('webimSession'),
+              onPressed: _webimSession,
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  void _webimSession() async {
+    final session = await _webimPlugin.webimSession(
+      accountName: "demo.webim.ru",
+      locationName: 'mobile',
+    );
+    print('session: ${session!}');
   }
 }

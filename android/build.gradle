@@ -42,7 +42,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
     }
 
     dependencies {
@@ -61,4 +61,8 @@ android {
             }
         }
     }
+}
+
+dependencies {
+    implementation 'ru.webim.sdk:webimclientsdkandroid:3.+'
 }

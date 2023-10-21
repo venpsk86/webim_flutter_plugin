@@ -26,4 +26,9 @@ abstract class WebimPlatform extends PlatformInterface {
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
+
+  Future<String?> webimSession(
+      {required String accountName, required String locationName}) {
+    throw UnimplementedError('webimSession() has not been implemented.');
+  }
 }
