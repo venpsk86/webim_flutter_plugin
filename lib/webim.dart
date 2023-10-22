@@ -6,8 +6,16 @@ class Webim {
   }
 
   Future<String?> webimSession(
-      {required String accountName, required String locationName}) {
+      {required String accountName, required String locationName, required String visitor}) {
     return WebimPlatform.instance
-        .webimSession(accountName: accountName, locationName: locationName);
+        .webimSession(accountName: accountName, locationName: locationName, visitor: visitor);
+  }
+
+  Future<String?> getSession() {
+    return WebimPlatform.instance.getSession();
+  }
+
+  Future<String?> getMessagesHistory() {
+    return WebimPlatform.instance.getMessagesHistory();
   }
 }

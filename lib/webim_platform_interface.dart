@@ -28,7 +28,15 @@ abstract class WebimPlatform extends PlatformInterface {
   }
 
   Future<String?> webimSession(
-      {required String accountName, required String locationName}) {
+      {required String accountName, required String locationName, required String visitor}) {
     throw UnimplementedError('webimSession() has not been implemented.');
+  }
+
+  Future<String?> getSession() {
+    throw UnimplementedError('getSession() has not been implemented.');
+  }
+
+  Future<String?> getMessagesHistory() {
+    throw UnimplementedError('getSession() has not been implemented.');
   }
 }

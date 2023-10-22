@@ -61,6 +61,14 @@ class _MyAppState extends State<MyApp> {
               child: Text('webimSession'),
               onPressed: _webimSession,
             ),
+            FilledButton(
+              child: Text('getSession'),
+              onPressed: _getSession,
+            ),
+            FilledButton(
+              child: Text('getMessagesHistory'),
+              onPressed: _getMessagesHistory,
+            ),
           ],
         ),
       ),
@@ -71,7 +79,22 @@ class _MyAppState extends State<MyApp> {
     final session = await _webimPlugin.webimSession(
       accountName: "demo.webim.ru",
       locationName: 'mobile',
+      visitor: """{
+        "id":"1",
+        "display_name":"Никита",
+        "hash":"ffadeb6aa3c788200824e311b9aa44cb"
+      }"""
     );
     print('session: ${session!}');
+  }
+
+  void _getSession() async {
+    final session = await _webimPlugin.getSession();
+    print('session: ${session!}');
+  }
+
+  void _getMessagesHistory() async {
+    final history = await _webimPlugin.getMessagesHistory();
+    print('messagesHistory: ${history!}');
   }
 }

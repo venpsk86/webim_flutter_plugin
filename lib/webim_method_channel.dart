@@ -18,9 +18,23 @@ class MethodChannelWebim extends WebimPlatform {
 
   @override
   Future<String> webimSession(
-      {required String accountName, required String locationName}) async {
+      {required String accountName, required String locationName, required String visitor}) async {
     final result = await methodChannel.invokeMethod<String>('webimSession',
-        {'ACCOUNT_NAME': accountName, 'LOCATION_NAME': locationName});
+        {'ACCOUNT_NAME': accountName, 'LOCATION_NAME': locationName, 'VISITOR': visitor});
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> getSession() async {
+    final result = await methodChannel.invokeMethod<String>('getSession');
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> getMessagesHistory() async {
+    final result = await methodChannel.invokeMethod<String>('getMessagesHistory');
 
     return result.toString();
   }
