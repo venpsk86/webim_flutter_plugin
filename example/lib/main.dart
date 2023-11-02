@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:convert' show json, utf8;
+import 'package:crypto/crypto.dart';
 
 import 'package:flutter/services.dart';
 import 'package:webim/webim.dart';
@@ -58,16 +60,24 @@ class _MyAppState extends State<MyApp> {
           children: [
             Text('Running on: $_platformVersion\n'),
             FilledButton(
-              child: Text('webimSession'),
               onPressed: _webimSession,
+              child: const Text('webimSession'),
             ),
             FilledButton(
-              child: Text('getSession'),
               onPressed: _getSession,
+              child: const Text('getSession'),
             ),
             FilledButton(
-              child: Text('getMessagesHistory'),
-              onPressed: _getMessagesHistory,
+              onPressed: _sendMessage,
+              child: const Text('sendMessage'),
+            ),
+            FilledButton(
+              onPressed: _getUnreadMessagesCount,
+              child: const Text('getMessagesHistory'),
+            ),
+            FilledButton(
+              onPressed: _getCurrentOperator,
+              child: const Text('getCurrentOperator'),
             ),
           ],
         ),
@@ -75,16 +85,29 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+
+
   void _webimSession() async {
+    final key = utf8.encode('eaf24dc27abe7b1f350849c7fc375450');
+    Map map = {'id': '6762', 'display_name': 'Евгений', 'phone': '79229734344'};
+    var sortedByKeyMap = Map.fromEntries(map.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)));
+    List list = [];
+    Map visitor = {};
+    sortedByKeyMap.forEach((k, v) => list.add(v));
+    final bytes = utf8.encode(list.join());
+
+    var hmacSha256 = Hmac(sha256, key);
+    var digest = hmacSha256.convert(bytes).toString();
+    visitor['fields'] = map;
+    visitor['hash'] = digest;
+
     final session = await _webimPlugin.webimSession(
-      accountName: "demo.webim.ru",
-      locationName: 'mobile',
-      visitor: """{
-        "id":"1",
-        "display_name":"Никита",
-        "hash":"ffadeb6aa3c788200824e311b9aa44cb"
-      }"""
+      accountName: "developprotempojoborg001",
+      locationName: 'default',
+      visitor: json.encode(visitor)
     );
+    print('list: ${list.join()!}');
+    print('visitor: ${json.encode(visitor)!}');
     print('session: ${session!}');
   }
 
@@ -93,8 +116,18 @@ class _MyAppState extends State<MyApp> {
     print('session: ${session!}');
   }
 
-  void _getMessagesHistory() async {
-    final history = await _webimPlugin.getMessagesHistory();
-    print('messagesHistory: ${history!}');
+  void _sendMessage() async {
+    final count = await _webimPlugin.sendMessage(message: 'Message from flutter plugin');
+    print('messagesCount: ${count!}');
+  }
+
+  void _getUnreadMessagesCount() async {
+    final count = await _webimPlugin.getUnreadMessagesCount();
+    print('messagesCount: ${count!}');
+  }
+
+  void _getCurrentOperator() async {
+    final count = await _webimPlugin.getCurrentOperator();
+    print('messagesCount: ${count!}');
   }
 }

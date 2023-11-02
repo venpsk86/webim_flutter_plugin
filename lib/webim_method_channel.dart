@@ -33,8 +33,23 @@ class MethodChannelWebim extends WebimPlatform {
   }
 
   @override
-  Future<String> getMessagesHistory() async {
-    final result = await methodChannel.invokeMethod<String>('getMessagesHistory');
+  Future<String> getUnreadMessagesCount() async {
+    final result = await methodChannel.invokeMethod<String>('getUnreadMessagesCount');
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> getCurrentOperator() async {
+    final result = await methodChannel.invokeMethod<String>('getCurrentOperator');
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> sendMessage({required String message}) async {
+    final result = await methodChannel.invokeMethod<String>('sendMessage',
+        {'MESSAGE': message});
 
     return result.toString();
   }

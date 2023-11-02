@@ -15,7 +15,15 @@ class Webim {
     return WebimPlatform.instance.getSession();
   }
 
-  Future<String?> getMessagesHistory() {
-    return WebimPlatform.instance.getMessagesHistory();
+  Future<String?> getCurrentOperator() {
+    return WebimPlatform.instance.getCurrentOperator();
+  }
+
+  Future<String?> getUnreadMessagesCount() {
+    return WebimPlatform.instance.getUnreadMessagesCount();
+  }
+
+  Future<String?> sendMessage({required String message}) {
+    return WebimPlatform.instance.sendMessage(message: message);
   }
 }

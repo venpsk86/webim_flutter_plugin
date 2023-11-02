@@ -36,7 +36,15 @@ abstract class WebimPlatform extends PlatformInterface {
     throw UnimplementedError('getSession() has not been implemented.');
   }
 
-  Future<String?> getMessagesHistory() {
-    throw UnimplementedError('getSession() has not been implemented.');
+  Future<String?> getUnreadMessagesCount() {
+    throw UnimplementedError('getUnreadMessagesCount() has not been implemented.');
+  }
+
+  Future<String?> getCurrentOperator() {
+    throw UnimplementedError('getCurrentOperator() has not been implemented.');
+  }
+
+  Future<String?> sendMessage({required String message}) {
+    throw UnimplementedError('sendMessage() has not been implemented.');
   }
 }

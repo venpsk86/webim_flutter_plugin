@@ -35,8 +35,12 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
       webimSession(call, result)
     } else if (call.method == "getSession") {
       getSession(call, result)
-    } else if (call.method == "getMessagesHistory") {
-      getMessagesHistory(call, result)
+    } else if (call.method == "getUnreadMessagesCount") {
+      getUnreadMessagesCount(call, result)
+    } else if (call.method == "sendMessage") {
+      sendMessage(call, result)
+    } else if (call.method == "getCurrentOperator") {
+      getCurrentOperator(call, result)
     } else {
       result.notImplemented()
     }
@@ -55,7 +59,7 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
             .setContext(context)
             .setAccountName(accountName)
             .setLocation(location)
-            .setVisitorFieldsJson(visitor)
+//            .setVisitorFieldsJson(visitor)
             .build()
 
     result.success(session.toString())
@@ -65,14 +69,25 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
     result.success(session.toString())
   }
 
-  private fun getMessagesHistory(@NonNull call: MethodCall, @NonNull result: Result) {
-//    session.resume();
-//    val tracker: MessageTracker = session.getStream.newMessageTracker(this)
-//    val MESSAGES_PER_REQUEST = 25
-//    val history = tracker.getLastMessages(MESSAGES_PER_REQUEST, object : GetMessagesCallback() {
-//
-//    })
-//
-//    result.success(history)
+  private fun getUnreadMessagesCount(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+    val unreadMessagesCount = session?.getStream()?.getUnreadByVisitorMessageCount()
+
+    result.success(unreadMessagesCount.toString())
+  }
+
+  private fun sendMessage(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+    val message = call.argument<String?>("MESSAGE") as String
+    val messageId = session?.getStream()?.sendMessage(message)
+
+    result.success(messageId.toString())
+  }
+
+  private fun getCurrentOperator(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+    val currentOperator = session?.getStream()?.getCurrentOperator()
+
+    result.success(currentOperator?.getName().toString())
   }
 }
