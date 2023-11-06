@@ -26,4 +26,8 @@ class Webim {
   Future<String?> sendMessage({required String message}) {
     return WebimPlatform.instance.sendMessage(message: message);
   }
+
+  Future<String?> getLastMessages() {
+    return WebimPlatform.instance.getLastMessages();
+  }
 }

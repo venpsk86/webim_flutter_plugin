@@ -11,6 +11,8 @@ import ru.webim.android.sdk.Webim
 import ru.webim.android.sdk.WebimSession
 import ru.webim.android.sdk.MessageStream
 import ru.webim.android.sdk.MessageTracker
+import ru.webim.android.sdk.MessageListener
+import ru.webim.android.sdk.Message
 
 /** WebimPlugin */
 class WebimPlugin: FlutterPlugin, MethodCallHandler {
@@ -41,6 +43,8 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
       sendMessage(call, result)
     } else if (call.method == "getCurrentOperator") {
       getCurrentOperator(call, result)
+    }  else if (call.method == "getLastMessages") {
+      getLastMessages(call, result)
     } else {
       result.notImplemented()
     }
@@ -59,7 +63,7 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
             .setContext(context)
             .setAccountName(accountName)
             .setLocation(location)
-//            .setVisitorFieldsJson(visitor)
+            .setVisitorFieldsJson(visitor)
             .build()
 
     result.success(session.toString())
@@ -89,5 +93,38 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
     val currentOperator = session?.getStream()?.getCurrentOperator()
 
     result.success(currentOperator?.getName().toString())
+  }
+
+  private fun getLastMessages(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+
+    val listener: MessageListener = MessageListenerDefault()
+    val tracker: MessageTracker = session?.getStream()!!.newMessageTracker(listener)
+    val getMessagesCallback = object : MessageTracker.GetMessagesCallback {
+      override fun receive(messages: List<Message>) {
+
+      }
+    }
+
+    val MESSAGES_PER_REQUEST = 25
+    tracker.getLastMessages(MESSAGES_PER_REQUEST, getMessagesCallback)
+  }
+}
+
+class MessageListenerDefault : MessageListener {
+  override fun messageAdded(before: Message?, message: Message) {
+    // body
+  }
+
+  override fun messageRemoved(message: Message) {
+    // body
+  }
+
+  override fun allMessagesRemoved() {
+    // body
+  }
+
+  override fun messageChanged(from: Message, to: Message) {
+    // body
   }
 }

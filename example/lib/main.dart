@@ -79,6 +79,10 @@ class _MyAppState extends State<MyApp> {
               onPressed: _getCurrentOperator,
               child: const Text('getCurrentOperator'),
             ),
+            FilledButton(
+              onPressed: _getLastMessages,
+              child: const Text('_getLastMessages'),
+            ),
           ],
         ),
       ),
@@ -129,5 +133,10 @@ class _MyAppState extends State<MyApp> {
   void _getCurrentOperator() async {
     final count = await _webimPlugin.getCurrentOperator();
     print('messagesCount: ${count!}');
+  }
+
+  void _getLastMessages() async {
+    final messages = await _webimPlugin.getLastMessages();
+    print('messages: ${messages!}');
   }
 }

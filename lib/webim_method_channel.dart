@@ -53,4 +53,11 @@ class MethodChannelWebim extends WebimPlatform {
 
     return result.toString();
   }
+
+  @override
+  Future<String> getLastMessages() async {
+    final result = await methodChannel.invokeMethod<String>('getLastMessages');
+
+    return result.toString();
+  }
 }
