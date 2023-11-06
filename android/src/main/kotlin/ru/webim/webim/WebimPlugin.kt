@@ -3,6 +3,7 @@ package ru.webim.webim
 import android.content.Context
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -23,10 +24,12 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
   private lateinit var context: Context
   private var session: WebimSession? = null
+  private val eventHandler = WebimChatEventHandler()
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "webim")
     channel.setMethodCallHandler(this)
+    EventChannel(flutterPluginBinding.binaryMessenger, "webim").setStreamHandler(eventHandler)
     context = flutterPluginBinding.applicationContext
   }
 
@@ -102,7 +105,7 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
     val tracker: MessageTracker = session?.getStream()!!.newMessageTracker(listener)
     val getMessagesCallback = object : MessageTracker.GetMessagesCallback {
       override fun receive(messages: List<Message>) {
-
+        result.success(messages.size.toString())
       }
     }
 
@@ -113,7 +116,7 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
 
 class MessageListenerDefault : MessageListener {
   override fun messageAdded(before: Message?, message: Message) {
-    // body
+    println(message.getText())
   }
 
   override fun messageRemoved(message: Message) {
@@ -126,5 +129,16 @@ class MessageListenerDefault : MessageListener {
 
   override fun messageChanged(from: Message, to: Message) {
     // body
+  }
+}
+
+class WebimChatEventHandler: EventChannel.StreamHandler {
+  private var eventSink: EventChannel.EventSink? = null
+
+  override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
+    eventSink = eventSink
+  }
+  override fun onCancel(arguments: Any?) {
+    eventSink = null
   }
 }

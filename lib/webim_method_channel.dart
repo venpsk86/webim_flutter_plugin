@@ -8,6 +8,15 @@ class MethodChannelWebim extends WebimPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('webim');
+  static const EventChannel _eventChannel = EventChannel('webim');
+
+  // MethodChannelWebim() {
+  //   _eventChannel.receiveBroadcastStream().listen((dynamic event) {
+  //     print('Received event: $event');
+  //   }, onError: (dynamic error) {
+  //     print('Received error: ${error.message}');
+  //   });
+  // }
 
   @override
   Future<String?> getPlatformVersion() async {
@@ -15,6 +24,10 @@ class MethodChannelWebim extends WebimPlatform {
         await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
+
+  // static Stream<double> setWebimListener() async* {
+  //   yield* _eventChannel.receiveBroadcastStream().asyncMap<double>((data) => data);
+  // }
 
   @override
   Future<String> webimSession(
