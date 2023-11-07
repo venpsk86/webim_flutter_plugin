@@ -20,6 +20,21 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
   final _webimPlugin = Webim();
+  static const stream = EventChannel('events');
+
+  late StreamSubscription _streamSubscription;
+
+  void _startListener() {
+    _streamSubscription = stream.receiveBroadcastStream().listen(_listenStream);
+  }
+
+  void _cancelListener() {
+    _streamSubscription.cancel();
+  }
+
+  void _listenStream(value) {
+    debugPrint("Received From Native:  $value\n");
+  }
 
   @override
   void initState() {
@@ -110,9 +125,8 @@ class _MyAppState extends State<MyApp> {
       locationName: 'default',
       visitor: json.encode(visitor)
     );
-    print('list: ${list.join()!}');
-    print('visitor: ${json.encode(visitor)!}');
-    print('session: ${session!}');
+
+    _startListener();
   }
 
   void _getSession() async {
@@ -122,7 +136,7 @@ class _MyAppState extends State<MyApp> {
 
   void _sendMessage() async {
     final count = await _webimPlugin.sendMessage(message: 'Message from flutter plugin');
-    print('messagesCount: ${count!}');
+    print('messageId: ${count!}');
   }
 
   void _getUnreadMessagesCount() async {
@@ -132,11 +146,10 @@ class _MyAppState extends State<MyApp> {
 
   void _getCurrentOperator() async {
     final count = await _webimPlugin.getCurrentOperator();
-    print('messagesCount: ${count!}');
+    print('operator: ${count!}');
   }
 
   void _getLastMessages() async {
     final messages = await _webimPlugin.getLastMessages();
-    print('messages: ${messages!}');
   }
 }

@@ -24,13 +24,24 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   private lateinit var channel : MethodChannel
   private lateinit var context: Context
   private var session: WebimSession? = null
-  private val eventHandler = WebimChatEventHandler()
+  private var attachEvent: EventChannel.EventSink? = null
+
+  val eventHandler = object : EventChannel.StreamHandler {
+
+    override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
+    attachEvent = eventSink
+    }
+    override fun onCancel(arguments: Any?) {
+    attachEvent = null
+    }
+  }
+
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "webim")
     channel.setMethodCallHandler(this)
-    EventChannel(flutterPluginBinding.binaryMessenger, "webim").setStreamHandler(eventHandler)
     context = flutterPluginBinding.applicationContext
+    EventChannel(flutterPluginBinding.binaryMessenger, "events").setStreamHandler(eventHandler)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -101,11 +112,13 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   private fun getLastMessages(@NonNull call: MethodCall, @NonNull result: Result) {
     session?.resume();
 
-    val listener: MessageListener = MessageListenerDefault()
+    val listener: MessageListener = MessageListenerDefault(attachEvent)
     val tracker: MessageTracker = session?.getStream()!!.newMessageTracker(listener)
     val getMessagesCallback = object : MessageTracker.GetMessagesCallback {
       override fun receive(messages: List<Message>) {
-        result.success(messages.size.toString())
+        for (message in messages) {
+          println(message.getText()!!)
+        }
       }
     }
 
@@ -114,8 +127,10 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   }
 }
 
-class MessageListenerDefault : MessageListener {
+class MessageListenerDefault (attachEvent: EventChannel.EventSink?) : MessageListener {
+  val attachEvent = attachEvent
   override fun messageAdded(before: Message?, message: Message) {
+    attachEvent!!.success(message.getText()!!);
     println(message.getText())
   }
 
@@ -129,16 +144,5 @@ class MessageListenerDefault : MessageListener {
 
   override fun messageChanged(from: Message, to: Message) {
     // body
-  }
-}
-
-class WebimChatEventHandler: EventChannel.StreamHandler {
-  private var eventSink: EventChannel.EventSink? = null
-
-  override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
-    eventSink = eventSink
-  }
-  override fun onCancel(arguments: Any?) {
-    eventSink = null
   }
 }
