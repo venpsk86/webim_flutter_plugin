@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 
 import 'package:flutter/services.dart';
 import 'package:webim/webim.dart';
+import 'package:webim_example/models/message.dart';
+import 'package:webim_example/models/operator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +40,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
+    _startListener();
     super.initState();
     initPlatformState();
   }
@@ -88,7 +91,7 @@ class _MyAppState extends State<MyApp> {
             ),
             FilledButton(
               onPressed: _getUnreadMessagesCount,
-              child: const Text('getMessagesHistory'),
+              child: const Text('getUnreadMessagesCount'),
             ),
             FilledButton(
               onPressed: _getCurrentOperator,
@@ -96,7 +99,19 @@ class _MyAppState extends State<MyApp> {
             ),
             FilledButton(
               onPressed: _getLastMessages,
-              child: const Text('_getLastMessages'),
+              child: const Text('getLastMessages'),
+            ),
+            FilledButton(
+              onPressed: _getNextMessages,
+              child: const Text('getNextMessages'),
+            ),
+            FilledButton(
+              onPressed: _setVisitorTyping,
+              child: const Text('setVisitorTyping'),
+            ),
+            FilledButton(
+              onPressed: _setVisitorTypingNull,
+              child: const Text('setVisitorTypingNull'),
             ),
           ],
         ),
@@ -107,7 +122,7 @@ class _MyAppState extends State<MyApp> {
 
 
   void _webimSession() async {
-    final key = utf8.encode('eaf24dc27abe7b1f350849c7fc375450');
+    final key = utf8.encode('84a68f78a5932fca137d57155e2a5f9c');
     Map map = {'id': '6762', 'display_name': 'Евгений', 'phone': '79229734344'};
     var sortedByKeyMap = Map.fromEntries(map.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)));
     List list = [];
@@ -121,12 +136,10 @@ class _MyAppState extends State<MyApp> {
     visitor['hash'] = digest;
 
     final session = await _webimPlugin.webimSession(
-      accountName: "developprotempojoborg001",
+      accountName: "tempojoborg",
       locationName: 'default',
       visitor: json.encode(visitor)
     );
-
-    _startListener();
   }
 
   void _getSession() async {
@@ -135,21 +148,41 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _sendMessage() async {
-    final count = await _webimPlugin.sendMessage(message: 'Message from flutter plugin');
+    final count = await _webimPlugin.sendMessage(message: '123');
     print('messageId: ${count!}');
   }
 
   void _getUnreadMessagesCount() async {
     final count = await _webimPlugin.getUnreadMessagesCount();
-    print('messagesCount: ${count!}');
+    print('unreadMessagesCount: ${count!}');
   }
 
   void _getCurrentOperator() async {
-    final count = await _webimPlugin.getCurrentOperator();
-    print('operator: ${count!}');
+    String? str = await _webimPlugin.getCurrentOperator();
+    final Operator operator = operatorModelFromJson(str ?? '');
   }
 
   void _getLastMessages() async {
-    final messages = await _webimPlugin.getLastMessages();
+    String? str = await _webimPlugin.getLastMessages();
+    final List<Message> messages = modelMessageFromJson(str ?? '');
+
+    print('getLastMessages: ${messages![messages.length - 1].text}');
+    print('getLastMessagesLength: ${messages.length}');
+  }
+
+  void _getNextMessages() async {
+    String? str = await _webimPlugin.getNextMessages();
+    final List<Message> messages = modelMessageFromJson(str ?? '');
+
+    print('getNextMessages: ${messages![messages.length - 1].text!}');
+    print('getNextMessagesLength: ${messages.length}');
+  }
+
+  void _setVisitorTyping() async {
+    await _webimPlugin.setVisitorTyping(message: 'typing');
+  }
+
+  void _setVisitorTypingNull() async {
+    await _webimPlugin.setVisitorTyping(message: null);
   }
 }

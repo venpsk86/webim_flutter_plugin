@@ -2,6 +2,8 @@ package ru.webim.webim
 
 import android.content.Context
 import androidx.annotation.NonNull
+import org.json.JSONArray
+import org.json.JSONObject
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -14,6 +16,7 @@ import ru.webim.android.sdk.MessageStream
 import ru.webim.android.sdk.MessageTracker
 import ru.webim.android.sdk.MessageListener
 import ru.webim.android.sdk.Message
+import ru.webim.android.sdk.MessageStream.OperatorTypingListener
 
 /** WebimPlugin */
 class WebimPlugin: FlutterPlugin, MethodCallHandler {
@@ -26,22 +29,22 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   private var session: WebimSession? = null
   private var attachEvent: EventChannel.EventSink? = null
 
-  val eventHandler = object : EventChannel.StreamHandler {
-
-    override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
-    attachEvent = eventSink
-    }
-    override fun onCancel(arguments: Any?) {
-    attachEvent = null
-    }
-  }
-
+  private lateinit var listener: MessageListener
+  private lateinit var tracker: MessageTracker
+  var visitorName: String? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+    EventChannel(flutterPluginBinding.binaryMessenger, "events").setStreamHandler(object : EventChannel.StreamHandler {
+      override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
+        attachEvent = eventSink
+      }
+      override fun onCancel(arguments: Any?) {
+        attachEvent = null
+      }
+    })
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "webim")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
-    EventChannel(flutterPluginBinding.binaryMessenger, "events").setStreamHandler(eventHandler)
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -57,8 +60,12 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
       sendMessage(call, result)
     } else if (call.method == "getCurrentOperator") {
       getCurrentOperator(call, result)
-    }  else if (call.method == "getLastMessages") {
+    } else if (call.method == "getLastMessages") {
       getLastMessages(call, result)
+    }  else if (call.method == "getNextMessages") {
+      getNextMessages(call, result)
+    }   else if (call.method == "setVisitorTyping") {
+      setVisitorTyping(call, result)
     } else {
       result.notImplemented()
     }
@@ -79,6 +86,23 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
             .setLocation(location)
             .setVisitorFieldsJson(visitor)
             .build()
+
+    tracker = session?.getStream()!!.newMessageTracker(MessageListenerDefault(attachEvent))
+
+    session?.getStream()?.setOperatorTypingListener(object : OperatorTypingListener {
+      override fun onOperatorTypingStateChanged(isTyping : Boolean) {
+        attachEvent!!.success("""
+          {
+            "event_type":"TYPING_OP",
+            "value":"${isTyping}"
+          }
+        """.trimIndent());
+      }
+    })
+
+    visitorName = JSONObject(visitor.substring(visitor.indexOf("{"), visitor.lastIndexOf("}") + 1))
+                  .getJSONObject("fields")
+                  .getString("display_name")
 
     result.success(session.toString())
   }
@@ -105,33 +129,83 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
   private fun getCurrentOperator(@NonNull call: MethodCall, @NonNull result: Result) {
     session?.resume();
     val currentOperator = session?.getStream()?.getCurrentOperator()
+    val jsonArray = JSONArray()
+    val rootObject= JSONObject()
+    rootObject.put("id", currentOperator?.getId())
+    rootObject.put("name", currentOperator?.getName())
+    rootObject.put("avatarUrl", currentOperator?.getAvatarUrl())
 
-    result.success(currentOperator?.getName().toString())
+    result.success(rootObject.toString())
   }
 
   private fun getLastMessages(@NonNull call: MethodCall, @NonNull result: Result) {
     session?.resume();
 
-    val listener: MessageListener = MessageListenerDefault(attachEvent)
-    val tracker: MessageTracker = session?.getStream()!!.newMessageTracker(listener)
     val getMessagesCallback = object : MessageTracker.GetMessagesCallback {
       override fun receive(messages: List<Message>) {
+        val jsonArray = JSONArray()
         for (message in messages) {
-          println(message.getText()!!)
+          val rootObject= JSONObject()
+          rootObject.put("id", message.clientSideId)
+          rootObject.put("text", message.getText())
+          rootObject.put("type", message.getType())
+          rootObject.put("avatarUrl", message.getSenderAvatarUrl())
+          rootObject.put("sendStatus", message.getSendStatus())
+          rootObject.put("senderName", message.getSenderName())
+          rootObject.put("operatorId", message.operatorId)
+          rootObject.put("time", message.getTime())
+          rootObject.put("isEdited", message.isEdited())
+          jsonArray.put(rootObject)
         }
+
+        result.success(jsonArray.toString())
       }
     }
 
     val MESSAGES_PER_REQUEST = 25
     tracker.getLastMessages(MESSAGES_PER_REQUEST, getMessagesCallback)
   }
+
+  private fun getNextMessages(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+
+    val getMessagesCallback = object : MessageTracker.GetMessagesCallback {
+      override fun receive(messages: List<Message>) {
+        val jsonArray = JSONArray()
+        for (message in messages) {
+          val rootObject= JSONObject()
+          rootObject.put("id", message.clientSideId)
+          rootObject.put("text", message.getText())
+          rootObject.put("type", message.getType())
+          rootObject.put("avatarUrl", message.getSenderAvatarUrl())
+          rootObject.put("sendStatus", message.getSendStatus())
+          rootObject.put("senderName", message.getSenderName())
+          rootObject.put("operatorId", message.operatorId)
+          rootObject.put("time", message.getTime())
+          rootObject.put("isEdited", message.isEdited())
+          jsonArray.put(rootObject)
+        }
+        result.success(jsonArray.toString())
+      }
+    }
+
+    val MESSAGES_PER_REQUEST = 25
+    tracker.getNextMessages(MESSAGES_PER_REQUEST, getMessagesCallback)
+  }
+
+  private fun setVisitorTyping(@NonNull call: MethodCall, @NonNull result: Result) {
+    session?.resume();
+    var draftMessage = call.argument<String?>("MESSAGE")
+
+    if (draftMessage != null) draftMessage = visitorName
+    session?.getStream()?.setVisitorTyping(draftMessage)
+  }
 }
 
 class MessageListenerDefault (attachEvent: EventChannel.EventSink?) : MessageListener {
   val attachEvent = attachEvent
   override fun messageAdded(before: Message?, message: Message) {
-    attachEvent!!.success(message.getText()!!);
-    println(message.getText())
+    attachEvent?.success(message.getText()!!);
   }
 
   override fun messageRemoved(message: Message) {

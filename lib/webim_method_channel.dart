@@ -9,14 +9,6 @@ class MethodChannelWebim extends WebimPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('webim');
 
-  // MethodChannelWebim() {
-  //   _eventChannel.receiveBroadcastStream().listen((dynamic event) {
-  //     print('Received event: $event');
-  //   }, onError: (dynamic error) {
-  //     print('Received error: ${error.message}');
-  //   });
-  // }
-
   @override
   Future<String?> getPlatformVersion() async {
     final version =
@@ -63,8 +55,23 @@ class MethodChannelWebim extends WebimPlatform {
   }
 
   @override
+  Future<String> setVisitorTyping({required String? message}) async {
+    final result = await methodChannel.invokeMethod<String>('setVisitorTyping',
+        {'MESSAGE': message});
+
+    return result.toString();
+  }
+
+  @override
   Future<String> getLastMessages() async {
     final result = await methodChannel.invokeMethod<String>('getLastMessages');
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> getNextMessages() async {
+    final result = await methodChannel.invokeMethod<String>('getNextMessages');
 
     return result.toString();
   }

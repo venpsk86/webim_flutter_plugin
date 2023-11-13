@@ -51,4 +51,12 @@ abstract class WebimPlatform extends PlatformInterface {
   Future<String?> getLastMessages() {
     throw UnimplementedError('getLastMessages() has not been implemented.');
   }
+
+  Future<String?> getNextMessages() {
+    throw UnimplementedError('getNextMessages() has not been implemented.');
+  }
+
+  Future<String?> setVisitorTyping({required String? message}) {
+    throw UnimplementedError('setVisitorTyping() has not been implemented.');
+  }
 }

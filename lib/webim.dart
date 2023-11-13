@@ -27,7 +27,15 @@ class Webim {
     return WebimPlatform.instance.sendMessage(message: message);
   }
 
+  Future<String?> setVisitorTyping({required String? message}) {
+    return WebimPlatform.instance.setVisitorTyping(message: message);
+  }
+
   Future<String?> getLastMessages() {
     return WebimPlatform.instance.getLastMessages();
+  }
+
+  Future<String?> getNextMessages() {
+    return WebimPlatform.instance.getNextMessages();
   }
 }
