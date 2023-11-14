@@ -123,7 +123,12 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
     val message = call.argument<String?>("MESSAGE") as String
     val messageId = session?.getStream()?.sendMessage(message)
 
-    result.success(messageId.toString())
+    result.success("""
+      {
+        "success":"true",
+        "id":"${messageId}"
+      }
+    """.trimIndent())
   }
 
   private fun getCurrentOperator(@NonNull call: MethodCall, @NonNull result: Result) {
