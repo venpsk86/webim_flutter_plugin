@@ -86,16 +86,13 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
       .getJSONObject("fields")
       .getString("display_name")
 
-    if (session == null) {
-      session = Webim.newSessionBuilder()
-        .setContext(context)
-        .setAccountName(accountName)
-        .setLocation(location)
-        .setVisitorFieldsJson(visitor)
-        .build()
-    } else {
-      session?.resume();
-    }
+    session = Webim.newSessionBuilder()
+      .setContext(context)
+      .setAccountName(accountName)
+      .setLocation(location)
+      .setVisitorFieldsJson(visitor)
+      .build()
+
     tracker = session?.getStream()!!.newMessageTracker(MessageListenerDefault(attachEvent))
     session?.getStream()?.setOperatorTypingListener(object : OperatorTypingListener {
       override fun onOperatorTypingStateChanged(isTyping : Boolean) {
