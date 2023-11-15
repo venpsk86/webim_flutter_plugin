@@ -12,7 +12,7 @@ class MethodChannelWebim extends WebimPlatform {
   @override
   Future<String?> getPlatformVersion() async {
     final version =
-        await methodChannel.invokeMethod<String>('getPlatformVersion');
+    await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
 
@@ -72,6 +72,13 @@ class MethodChannelWebim extends WebimPlatform {
   @override
   Future<String> getNextMessages() async {
     final result = await methodChannel.invokeMethod<String>('getNextMessages');
+
+    return result.toString();
+  }
+
+  @override
+  Future<String> destroySession() async {
+    final result = await methodChannel.invokeMethod<String>('destroySession');
 
     return result.toString();
   }

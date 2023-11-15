@@ -62,10 +62,12 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
       getCurrentOperator(call, result)
     } else if (call.method == "getLastMessages") {
       getLastMessages(call, result)
-    }  else if (call.method == "getNextMessages") {
+    } else if (call.method == "getNextMessages") {
       getNextMessages(call, result)
-    }   else if (call.method == "setVisitorTyping") {
+    } else if (call.method == "setVisitorTyping") {
       setVisitorTyping(call, result)
+    } else if (call.method == "destroySession") {
+      destroySession()
     } else {
       result.notImplemented()
     }
@@ -80,31 +82,39 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
     val location = call.argument<String?>("LOCATION_NAME") as String
     val visitor = call.argument<String?>("VISITOR") as String
 
-    session = Webim.newSessionBuilder()
-            .setContext(context)
-            .setAccountName(accountName)
-            .setLocation(location)
-            .setVisitorFieldsJson(visitor)
-            .build()
+    visitorName = JSONObject(visitor.substring(visitor.indexOf("{"), visitor.lastIndexOf("}") + 1))
+      .getJSONObject("fields")
+      .getString("display_name")
 
+    if (session == null) {
+      session = Webim.newSessionBuilder()
+        .setContext(context)
+        .setAccountName(accountName)
+        .setLocation(location)
+        .setVisitorFieldsJson(visitor)
+        .build()
+    } else {
+      session?.resume();
+    }
     tracker = session?.getStream()!!.newMessageTracker(MessageListenerDefault(attachEvent))
-
     session?.getStream()?.setOperatorTypingListener(object : OperatorTypingListener {
       override fun onOperatorTypingStateChanged(isTyping : Boolean) {
-        attachEvent!!.success("""
-          {
-            "event_type":"TYPING_OP",
-            "value":"${isTyping}"
-          }
-        """.trimIndent());
+        if (attachEvent != null) {
+          attachEvent!!.success("""
+            {
+              "event_type":"TYPING_OP",
+              "value":"${isTyping}"
+            }
+          """.trimIndent());
+        }
       }
     })
 
-    visitorName = JSONObject(visitor.substring(visitor.indexOf("{"), visitor.lastIndexOf("}") + 1))
-                  .getJSONObject("fields")
-                  .getString("display_name")
-
     result.success(session.toString())
+  }
+
+  private fun destroySession() {
+    session?.destroy()
   }
 
   private fun getSession(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -210,7 +220,19 @@ class WebimPlugin: FlutterPlugin, MethodCallHandler {
 class MessageListenerDefault (attachEvent: EventChannel.EventSink?) : MessageListener {
   val attachEvent = attachEvent
   override fun messageAdded(before: Message?, message: Message) {
-    attachEvent?.success(message.getText()!!);
+    val rootObject= JSONObject()
+    rootObject.put("id", message.clientSideId)
+    rootObject.put("text", message.getText())
+    rootObject.put("type", message.getType())
+    rootObject.put("avatarUrl", message.getSenderAvatarUrl())
+    rootObject.put("sendStatus", message.getSendStatus())
+    rootObject.put("senderName", message.getSenderName())
+    rootObject.put("operatorId", message.operatorId)
+    rootObject.put("time", message.getTime())
+    rootObject.put("isEdited", message.isEdited())
+    attachEvent?.success("""
+      {"event_type": "NEW_MESSAGE", "value": ${rootObject.toString()}}
+    """.trimIndent());
   }
 
   override fun messageRemoved(message: Message) {

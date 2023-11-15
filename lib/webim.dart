@@ -38,4 +38,8 @@ class Webim {
   Future<String?> getNextMessages() {
     return WebimPlatform.instance.getNextMessages();
   }
+
+  Future<String?> destroySession() {
+    return WebimPlatform.instance.destroySession();
+  }
 }

@@ -59,4 +59,8 @@ abstract class WebimPlatform extends PlatformInterface {
   Future<String?> setVisitorTyping({required String? message}) {
     throw UnimplementedError('setVisitorTyping() has not been implemented.');
   }
+
+  Future<String?> destroySession() {
+    throw UnimplementedError('destroySession() has not been implemented.');
+  }
 }
